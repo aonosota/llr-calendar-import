@@ -1,0 +1,182 @@
+/**
+ * Pure string tables (no `obsidian` import) so pure modules and tests can use them.
+ * Placeholders: {name}.
+ */
+
+export type Lang = "ja" | "en";
+
+const en = {
+  // commands
+  "cmd.today": "Insert today's events",
+  "cmd.date": "Insert events for a date…",
+  // notices
+  "notice.busy": "Calendar import is already running.",
+  "notice.inserted": "Inserted {n} event(s)",
+  "notice.nothingNew": "No new events",
+  "notice.dup": "skipped {n} already inserted",
+  "notice.changed": "appended {n} changed",
+  "notice.fallback": "added {n} under {heading} (section not found)",
+  "notice.filtered": "filtered out {n}",
+  "notice.failed": "Fetch failed: {name}",
+  "notice.allFailed": "Could not fetch any calendar. The note was not changed.",
+  "notice.noSources": "No enabled calendar. Add one in the plugin settings.",
+  "notice.settingsError": "Settings error: {message}. The note was not changed.",
+  "notice.writeError": "Could not update the daily note. The note was not changed.",
+  "notice.unexpected": "Calendar import failed unexpectedly. See the developer console.",
+  "notice.invalidDate": "Invalid date.",
+  "unnamedCalendar": "Calendar {n}",
+  // modals
+  "modal.date.title": "Insert events for a date",
+  "modal.date.submit": "Insert",
+  "modal.create.title": "Create daily note?",
+  "modal.create.body": "The daily note \"{path}\" does not exist. Create it and insert the events?",
+  "modal.create.ok": "Create",
+  "modal.cancel": "Cancel",
+  // settings
+  "set.options": "Options",
+  "set.calendars": "Calendars",
+  "set.calendars.desc": "ICS URLs (e.g. Google Calendar \"Secret address in iCal format\"). Treat private URLs like passwords.",
+  "set.calendars.syncWarn": "data.json may be synced (e.g. by Obsidian Sync). A private URL is equivalent to a password.",
+  "set.calendars.secretNote": "URLs are stored in Obsidian's secret storage, not in data.json.",
+  "set.calendars.add": "Add calendar",
+  "set.cal.label": "Label",
+  "set.cal.url": "ICS URL",
+  "set.cal.urlStored": "Stored (type to replace)",
+  "set.cal.enabled": "Enabled",
+  "set.cal.remove": "Remove",
+  "set.sections": "Sections",
+  "set.sections.desc": "Section start time (HH:mm) and the heading label in your daily note, e.g. 05:00 / 朝 for \"## 朝\".",
+  "set.sections.hint": "Running LLR's Insert Routine first makes sure the headings exist.",
+  "set.sections.add": "Add section",
+  "set.sections.start": "Start (HH:mm)",
+  "set.sections.heading": "Heading label",
+  "set.headingMatch": "Heading match",
+  "set.headingMatch.desc": "How section labels are matched against headings.",
+  "set.headingMatch.exact": "Exact",
+  "set.headingMatch.partial": "Partial (contains)",
+  "set.dayBoundary": "Day boundary",
+  "set.dayBoundary.desc": "Events before this time belong to the previous day's note (HH:mm).",
+  "set.fallbackHeading": "Fallback heading",
+  "set.fallbackHeading.desc": "Used when a section heading is not found and for all-day events. Created at the end of the note if missing.",
+  "set.defaultDuration": "Default duration (minutes)",
+  "set.defaultDuration.desc": "Estimate used when an event has no end.",
+  "set.estimateFormat": "Estimate format",
+  "set.estimateFormat.m": "Minutes (90m)",
+  "set.estimateFormat.h": "Hours (1.5h)",
+  "set.titlePrefix": "Title prefix",
+  "set.titlePrefix.desc": "Text prepended to every title.",
+  "set.prefixLabel": "Prefix calendar label",
+  "set.prefixLabel.desc": "Prepend \"[label] \" to titles.",
+  "set.excludeKeywords": "Exclude keywords",
+  "set.excludeKeywords.desc": "Events whose title contains any of these (case-insensitive) are skipped. Separate with commas or new lines.",
+  "set.myEmail": "My e-mail",
+  "set.myEmail.desc": "Used to find your response (accepted/declined/tentative) in attendee lists.",
+  "set.skipDeclined": "Skip declined events",
+  "set.tentativePrefix": "Tentative prefix",
+  "set.tentativePrefix.desc": "Prefix for tentative events. Empty = none.",
+  "set.includeAllDay": "Include all-day events",
+  "set.includeAllDay.desc": "All-day events are added under the fallback heading without a time.",
+  "set.debugLog": "Debug log",
+  "set.debugLog.desc": "Write diagnostics to the developer console (URLs are masked).",
+  // validation
+  "err.hhmm": "Use HH:mm (00:00-23:59).",
+  "err.sectionStart": "Section {i}: start must be HH:mm.",
+  "err.sectionDup": "Duplicate start time {start}.",
+  "err.fallback": "Must be a heading line starting with #, e.g. \"## Calendar\".",
+  "err.positiveInt": "Enter a positive whole number.",
+} as const;
+
+export type MessageKey = keyof typeof en;
+
+const ja: Record<MessageKey, string> = {
+  "cmd.today": "今日の予定を挿入",
+  "cmd.date": "日付を指定して予定を挿入",
+  "notice.busy": "予定の取り込みを実行中です。",
+  "notice.inserted": "{n} 件を挿入",
+  "notice.nothingNew": "新しい予定はありません",
+  "notice.dup": "{n} 件は挿入済みのためスキップ",
+  "notice.changed": "{n} 件は変更のため追記",
+  "notice.fallback": "{n} 件はセクションが見つからず {heading} に追加",
+  "notice.filtered": "{n} 件はフィルタで除外",
+  "notice.failed": "取得失敗: {name}",
+  "notice.allFailed": "カレンダーを取得できませんでした。ノートは変更していません。",
+  "notice.noSources": "有効なカレンダーがありません。設定でカレンダーを追加してください。",
+  "notice.settingsError": "設定エラー: {message}。ノートは変更していません。",
+  "notice.writeError": "デイリーノートを更新できませんでした。ノートは変更していません。",
+  "notice.unexpected": "予定の取り込みに失敗しました。開発者コンソールを確認してください。",
+  "notice.invalidDate": "日付が正しくありません。",
+  "unnamedCalendar": "カレンダー {n}",
+  "modal.date.title": "日付を指定して予定を挿入",
+  "modal.date.submit": "挿入",
+  "modal.create.title": "デイリーノートを作成しますか?",
+  "modal.create.body": "デイリーノート「{path}」がありません。作成して予定を挿入しますか?",
+  "modal.create.ok": "作成",
+  "modal.cancel": "キャンセル",
+  "set.options": "オプション",
+  "set.calendars": "カレンダー",
+  "set.calendars.desc": "ICS の URL(例: Google カレンダーの「iCal 形式の非公開 URL」)。非公開 URL はパスワード相当です。",
+  "set.calendars.syncWarn": "data.json は Obsidian Sync 等で同期されることがあります。非公開URLはパスワード相当です。",
+  "set.calendars.secretNote": "URL は data.json ではなく Obsidian のシークレットストレージに保存されます。",
+  "set.calendars.add": "カレンダーを追加",
+  "set.cal.label": "ラベル",
+  "set.cal.url": "ICS URL",
+  "set.cal.urlStored": "保存済み(入力すると置き換え)",
+  "set.cal.enabled": "有効",
+  "set.cal.remove": "削除",
+  "set.sections": "セクション",
+  "set.sections.desc": "セクションの開始時刻(HH:mm)と、デイリーノートの見出しラベル(例: 05:00 / 朝 → 「## 朝」)。",
+  "set.sections.hint": "LLR の Insert Routine を先に実行しておくと見出しが揃います",
+  "set.sections.add": "セクションを追加",
+  "set.sections.start": "開始(HH:mm)",
+  "set.sections.heading": "見出しラベル",
+  "set.headingMatch": "見出しの照合",
+  "set.headingMatch.desc": "セクションラベルと見出しの照合方法。",
+  "set.headingMatch.exact": "完全一致",
+  "set.headingMatch.partial": "部分一致",
+  "set.dayBoundary": "日付変更時刻",
+  "set.dayBoundary.desc": "この時刻より前の予定は前日のノートに入ります(HH:mm)。",
+  "set.fallbackHeading": "フォールバック見出し",
+  "set.fallbackHeading.desc": "セクション見出しが見つからない予定と終日予定の挿入先。無ければノート末尾に作成します。",
+  "set.defaultDuration": "既定の長さ(分)",
+  "set.defaultDuration.desc": "終了時刻が無い予定の見積もり。",
+  "set.estimateFormat": "見積もりの表記",
+  "set.estimateFormat.m": "分(90m)",
+  "set.estimateFormat.h": "時間(1.5h)",
+  "set.titlePrefix": "タイトルの接頭辞",
+  "set.titlePrefix.desc": "すべてのタイトルの先頭に付ける文字列。",
+  "set.prefixLabel": "カレンダー名を接頭辞にする",
+  "set.prefixLabel.desc": "タイトルの先頭に「[ラベル] 」を付けます。",
+  "set.excludeKeywords": "除外キーワード",
+  "set.excludeKeywords.desc": "タイトルに含まれていたらスキップします(大文字小文字無視)。カンマまたは改行で区切ります。",
+  "set.myEmail": "自分のメールアドレス",
+  "set.myEmail.desc": "参加者の中から自分の出欠(承諾・辞退・仮承諾)を判定するのに使います。",
+  "set.skipDeclined": "辞退した予定をスキップ",
+  "set.tentativePrefix": "仮承諾の接頭辞",
+  "set.tentativePrefix.desc": "仮承諾の予定に付ける接頭辞。空なら付けません。",
+  "set.includeAllDay": "終日予定を含める",
+  "set.includeAllDay.desc": "終日予定はフォールバック見出しの下に時刻なしで入ります。",
+  "set.debugLog": "デバッグログ",
+  "set.debugLog.desc": "開発者コンソールに診断情報を出力します(URL はマスクされます)。",
+  "err.hhmm": "HH:mm 形式(00:00〜23:59)で入力してください。",
+  "err.sectionStart": "セクション {i}: 開始時刻は HH:mm 形式で入力してください。",
+  "err.sectionDup": "開始時刻 {start} が重複しています。",
+  "err.fallback": "「## Calendar」のように # で始まる見出し行にしてください。",
+  "err.positiveInt": "正の整数を入力してください。",
+};
+
+const DICTS: Record<Lang, Record<MessageKey, string>> = { en, ja };
+
+/** Language code (e.g. "ja", "ja-JP", "en-GB") → supported Lang; default en. */
+export function resolveLang(code: string | null | undefined): Lang {
+  return code && code.toLowerCase().startsWith("ja") ? "ja" : "en";
+}
+
+export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string;
+
+export function translator(lang: Lang): Translate {
+  const dict = DICTS[lang];
+  return (key, params) =>
+    dict[key].replace(/\{(\w+)\}/g, (all, name: string) =>
+      params && name in params ? String(params[name]) : all,
+    );
+}
