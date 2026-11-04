@@ -1,0 +1,9 @@
+{
+  "id": "llr-calendar-import",
+  "name": "LLR Calendar Import",
+  "version": "0.1.0",
+  "minAppVersion": "1.7.2",
+  "description": "Import calendar (ICS) events into your daily note as LLR task lines, placed under the matching time-of-day section.",
+  "author": "Sota Aono",
+  "isDesktopOnly": false
+}
