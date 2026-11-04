@@ -81,7 +81,10 @@ export type TextFetcher = (url: string) => Promise<{ status: number; text: strin
 
 export interface CalendarConfig {
   id: string;
+  /** Plain URL (data.json fallback). Empty when the URL lives in SecretStorage. */
   url: string;
+  /** SecretStorage id holding the URL (Obsidian >= 1.11.4), if used. */
+  secretId?: string;
   label?: string;
   enabled: boolean;
 }
