@@ -5,15 +5,10 @@ import type { Lang, Translate } from "./dict";
 export type { Lang, MessageKey, Translate } from "./dict";
 export { resolveLang, translator } from "./dict";
 
-/** App language: getLanguage() (Obsidian >= 1.8.7) or localStorage "language"; default en. */
+/** App language from Obsidian (getLanguage(), Obsidian >= 1.8.7); falls back to en. */
 export function detectLang(): Lang {
   try {
-    if (typeof getLanguage === "function") return resolveLang(getLanguage());
-  } catch {
-    // fall through
-  }
-  try {
-    return resolveLang(window.localStorage.getItem("language"));
+    return resolveLang(getLanguage());
   } catch {
     return "en";
   }

@@ -51,9 +51,9 @@ npm test         # vitest
 npm run build    # typecheck + production build
 ```
 
-Copy `main.js` and `manifest.json` into `<vault>/.obsidian/plugins/llr-calendar-import/` to try it.
+Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/llr-calendar-import/` to try it.
 
-Releases: bump `version` in `manifest.json`, `package.json` and `versions.json`, then push a tag equal to the version (e.g. `0.1.0`). GitHub Actions builds and creates a draft release with `main.js` and `manifest.json`.
+Releases: bump `version` in `manifest.json`, `package.json` and `versions.json`, then push a tag equal to the version (e.g. `0.1.0`). GitHub Actions builds and creates a draft release with `main.js`, `manifest.json` and `styles.css`.
 
 For the full release and community-directory submission procedure (and how it differs from older guides), see [`docs/releasing.md`](docs/releasing.md) (Japanese).
 

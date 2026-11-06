@@ -137,7 +137,7 @@
 | プラットフォーム | デスクトップ・モバイル両対応(`isDesktopOnly: false`)。Node API を使わない |
 | 保守性 | ICS 展開・行生成・セクション割り当て・挿入位置は Obsidian 非依存の純関数 + vitest |
 | 多言語 | 日本語 / 英語 |
-| 最小 Obsidian | 1.7.2 |
+| 最小 Obsidian | 1.8.7(当初 1.7.2 だったが、公式 `getLanguage()` を使うため 2026-11-06 に引き上げ) |
 
 ## 6. モジュール構成
 - `src/types.ts`, `src/time.ts` — 共有契約(凍結)

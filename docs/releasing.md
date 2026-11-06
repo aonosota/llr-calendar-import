@@ -23,7 +23,7 @@
 3. バージョンと同じタグ(`v` を付けない。例: `0.1.0`)を push する。
    `.github/workflows/release.yml` がテストとビルドを行い、`main.js` と `manifest.json` を添付した**下書きリリース**を作る。
 4. GitHub でリリースの内容を確認し、**Publish** する(Private のままでも操作できる)。
-   - `styles.css` を追加したら、添付ファイルにも含めること(現状のワークフローは `main.js` と `manifest.json` だけ)。
+   - 添付ファイルは `main.js`・`manifest.json`・`styles.css`(`release.yml` が自動で添付する)。
 
 ### 2. 申請する(初回のみ)
 
@@ -45,15 +45,17 @@
 - リポジトリ直下に `README.md`、`LICENSE`、`manifest.json` がある(済)
 - `id` は他と重複せず、`obsidian` を含まない。**公開後は変更できない**(現在: `llr-calendar-import`)
 - 自動レビューはビルドスクリプトとして `build` → `build:plugin` → `compile` の最初の一致を使う(現在: `build`、本番ビルドになっている)
-- ローカルでの事前チェックには、公式の ESLint プラグイン <https://github.com/obsidianmd/eslint-plugin> を使う(**未導入**)
+- ローカルでの事前チェックには、公式の ESLint プラグイン <https://github.com/obsidianmd/eslint-plugin> を使う(導入済み。`npm run lint`。`package.json` などもチェックするため、`src` ではなくプロジェクトのルートで実行する)
 - 「Developer policies」と「Submission requirements for plugins」は、公式ドキュメント内のリンク先 URL を取得できず、**内容を確認できていない**。申請前に自分で読むこと
 
 ## 現状の実装と Plugin guidelines の照合(2026-11-06)
 
 | 項目 | 状態 |
 |---|---|
-| インラインスタイルを使わない(CSS クラスと `styles.css` を使う) | **要修正**: `src/ui/settings.ts:23` で `el.style.color` を直接設定している |
-| ESLint の公式プラグインで確認する | **未導入** |
+| インラインスタイルを使わない(CSS クラスと `styles.css` を使う) | OK(2026-11-06 修正。エラー表示の色は `styles.css` の `.llr-cal-error`) |
+| ESLint の公式プラグインで確認する | OK(導入済み。エラー 0 件) |
+| 最小バージョンと使用 API の整合 | OK(`getLanguage()` が 1.8.7 以降のため、`minAppVersion` を 1.8.7 に引き上げ) |
+| 設定画面の新しい宣言的 API(`getSettingDefinitions()`、Obsidian 1.13 以降の設定検索対応) | 未対応(ESLint の警告 1 件。任意の改善) |
 | `innerHTML` 等を使わない | OK |
 | グローバルな `app` を使わない | OK |
 | 既定のホットキーを設定しない | OK |

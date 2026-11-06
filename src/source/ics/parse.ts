@@ -82,8 +82,8 @@ function partstatOf(comp: Component, myEmail: string | undefined): Partstat | nu
     const raw = String(prop.getFirstValue() ?? "").trim().toLowerCase();
     const addr = raw.startsWith("mailto:") ? raw.slice("mailto:".length) : raw;
     if (addr !== target) continue;
-    const param = prop.getParameter("partstat");
-    const value = Array.isArray(param) ? param[0] : param;
+    const param: unknown = prop.getParameter("partstat");
+    const value: unknown = Array.isArray(param) ? (param as unknown[])[0] : param;
     // RFC 5545: PARTSTAT defaults to NEEDS-ACTION.
     const ps = typeof value === "string" ? value.toLowerCase() : "needs-action";
     return PARTSTATS.has(ps) ? (ps as Partstat) : null;
@@ -147,7 +147,8 @@ export function parseIcsEvents(
   if (!icsText || !icsText.trim()) fail();
   let root: Component;
   try {
-    root = new ICAL.Component(ICAL.parse(icsText));
+    const jcal = ICAL.parse(icsText) as unknown[];
+    root = new ICAL.Component(jcal);
   } catch {
     return fail();
   }

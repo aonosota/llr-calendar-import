@@ -19,9 +19,7 @@ export interface SettingsHost extends Plugin {
 }
 
 function errorEl(parent: HTMLElement): HTMLElement {
-  const el = parent.createDiv({ cls: "llr-cal-error" });
-  el.style.color = "var(--text-error)";
-  return el;
+  return parent.createDiv({ cls: "llr-cal-error" });
 }
 
 export class LlrCalendarSettingTab extends PluginSettingTab {

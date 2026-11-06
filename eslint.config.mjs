@@ -1,11 +1,17 @@
-import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
+import obsidianmd from "eslint-plugin-obsidianmd";
 
-export default tseslint.config(
-  { ignores: ["main.js", "node_modules/**"] },
-  ...tseslint.configs.recommended,
+export default defineConfig([
+  // Build output and Node build scripts are not plugin code.
+  globalIgnores(["node_modules", "main.js", "esbuild.config.mjs", "coverage"]),
+  ...obsidianmd.configs.recommended,
   {
-    rules: {
-      "no-console": ["warn", { allow: ["warn", "error", "debug"] }],
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ["eslint.config.*"],
+        },
+      },
     },
   },
-);
+]);
