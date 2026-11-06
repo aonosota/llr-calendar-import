@@ -23,6 +23,12 @@ describe("data.json helpers", () => {
     expect(s.calendars).toEqual([{ id: "a", url: "u", enabled: true }]);
   });
 
+  it("mergeSettings keeps urlStorage and secretId", () => {
+    const s = mergeSettings({ calendars: [{ id: "a", url: "", secretId: "llr-cal-a", urlStorage: "synced" }, { id: "b", url: "", urlStorage: "x" }] });
+    expect(s.calendars[0]).toEqual({ id: "a", url: "", enabled: true, secretId: "llr-cal-a", urlStorage: "synced" });
+    expect(s.calendars[1]).toEqual({ id: "b", url: "", enabled: true });
+  });
+
   it("pruneRecords keeps the last 60 days", () => {
     const out = pruneRecords([rec("2026-09-05"), rec("2026-09-04"), rec("2026-11-04")], "2026-11-04");
     expect(out.map((r) => r.date)).toEqual(["2026-09-05", "2026-11-04"]);

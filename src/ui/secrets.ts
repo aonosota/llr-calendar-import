@@ -1,5 +1,7 @@
 import type { App } from "obsidian";
 import type { CalendarConfig } from "../types";
+import { resolveUrlInfo } from "./urlStorage";
+import type { UrlInfo } from "./urlStorage";
 
 /** SecretStorage subset (Obsidian >= 1.11.4). */
 export interface SecretStore {
@@ -15,17 +17,13 @@ export function secretStore(app: App): SecretStore | null {
   return null;
 }
 
-/** The calendar's URL (from SecretStorage or data.json), "" when not set. Never log it. */
+/** The calendar's URL and why it is empty, if it is. Never log the URL. */
+export function resolveCalendarUrlInfo(app: App, cfg: CalendarConfig): UrlInfo {
+  const store = secretStore(app);
+  return resolveUrlInfo(cfg, store ? (id) => store.getSecret(id) : null);
+}
+
+/** The calendar's URL, "" when not set. Never log it. */
 export function resolveCalendarUrl(app: App, cfg: CalendarConfig): string {
-  if (cfg.secretId) {
-    const store = secretStore(app);
-    if (store) {
-      try {
-        return store.getSecret(cfg.secretId) ?? "";
-      } catch {
-        return "";
-      }
-    }
-  }
-  return cfg.url;
+  return resolveCalendarUrlInfo(app, cfg).url;
 }

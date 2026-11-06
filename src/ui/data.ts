@@ -32,6 +32,7 @@ function toCalendar(v: unknown, i: number): CalendarConfig | null {
   };
   if (typeof v.label === "string") cfg.label = v.label;
   if (typeof v.secretId === "string" && v.secretId !== "") cfg.secretId = v.secretId;
+  if (v.urlStorage === "device" || v.urlStorage === "synced") cfg.urlStorage = v.urlStorage;
   return cfg;
 }
 

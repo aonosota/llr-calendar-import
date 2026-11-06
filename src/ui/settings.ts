@@ -1,10 +1,16 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { Notice, PluginSettingTab, Setting } from "obsidian";
 import type { App, Plugin } from "obsidian";
 import type { CalendarConfig, EstimateFormat, HeadingMatchMode, PluginSettings } from "../types";
 import { isValidHHmm } from "../time";
 import type { Translate } from "../i18n";
 import { isValidFallbackHeading, newCalendarId, parseKeywords, secretIdFor, validateSections } from "./data";
-import { secretStore } from "./secrets";
+import { resolveCalendarUrlInfo, secretStore } from "./secrets";
+import type { SecretStore } from "./secrets";
+import { applyUrlInput, changeStorage, effectiveStorage } from "./urlStorage";
+import type { SecretWrite, UrlStorage } from "./urlStorage";
+import { convertLlrSections, sectionBeforeBoundary } from "./llrSections";
+import { readLlrSectionDefinitions } from "./llrImport";
+import { confirmModal } from "./modals";
 
 export interface SettingsHost extends Plugin {
   settings: PluginSettings;
@@ -52,6 +58,7 @@ export class LlrCalendarSettingTab extends PluginSettingTab {
       text: store ? t("set.calendars.secretNote") : t("set.calendars.syncWarn"),
       cls: "setting-item-description",
     });
+    root.createEl("p", { text: t("set.calendars.security"), cls: "setting-item-description" });
 
     this.s.calendars.forEach((cal, i) => this.renderCalendar(root, cal, i));
 
@@ -104,37 +111,77 @@ export class LlrCalendarSettingTab extends PluginSettingTab {
           }),
       );
 
-    const hasStored = Boolean(cal.secretId && store?.getSecret(cal.secretId));
-    new Setting(box).setName(t("set.cal.url")).addText((text) => {
-      text.inputEl.type = "password";
-      text.inputEl.autocomplete = "off";
-      text.inputEl.spellcheck = false;
-      if (store) {
-        text.setPlaceholder(hasStored ? t("set.cal.urlStored") : "https://…/basic.ics");
-        if (cal.url) text.setValue(cal.url);
-      } else {
-        text.setPlaceholder("https://…/basic.ics").setValue(cal.url);
-      }
-      text.onChange((v) => {
-        const url = v.trim();
-        if (store) {
-          // Empty input keeps a stored secret (the field is shown empty).
-          if (url === "" && hasStored) return;
-          try {
-            const id = secretIdFor(cal.id);
-            store.setSecret(id, url);
-            cal.secretId = id;
-            cal.url = "";
-          } catch {
-            delete cal.secretId;
-            cal.url = url;
-          }
-        } else {
-          cal.url = url;
-        }
-        this.save();
-      });
+    const storage = effectiveStorage(cal, store !== null);
+    const info = resolveCalendarUrlInfo(this.app, cal);
+    const storageSetting = new Setting(box).setName(t("set.cal.storage"));
+    if (!store) storageSetting.setDesc(t("set.cal.storage.noSecret"));
+    storageSetting.addDropdown((d) => {
+      d.addOption("device", t("set.cal.storage.device")).addOption("synced", t("set.cal.storage.synced"));
+      d.setValue(storage);
+      if (!store) d.selectEl.options[0]?.setAttribute("disabled", "true");
+      d.onChange((v) => this.switchStorage(index, v as UrlStorage, store));
     });
+
+    new Setting(box)
+      .setName(t("set.cal.url"))
+      .setDesc(info.missing === null ? t("set.cal.status.saved") : t("set.cal.status.unsaved"))
+      .addText((text) => {
+        text.inputEl.type = "password";
+        text.inputEl.autocomplete = "off";
+        text.inputEl.spellcheck = false;
+        text.setPlaceholder(info.missing === null ? t("set.cal.urlStored") : "https://…/basic.ics");
+        text.onChange((v) => {
+          const url = v.trim();
+          // Empty input keeps a stored URL (the field is shown empty).
+          if (url === "" && info.missing === null) return;
+          this.writeUrl(cal, url, store);
+        });
+      });
+    if (this.pendingEnter.has(cal.id) && info.missing !== null) {
+      errorEl(box).setText(t("set.cal.enterUrl"));
+    }
+  }
+
+  /** Calendars that were just switched to "synced" without a URL on this device. */
+  private readonly pendingEnter = new Set<string>();
+
+  private runWrite(write: SecretWrite | null, store: SecretStore | null): boolean {
+    if (!write) return true;
+    if (!store) return false;
+    try {
+      store.setSecret(write.id, write.value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private writeUrl(cal: CalendarConfig, url: string, store: SecretStore | null): void {
+    const r = applyUrlInput(cal, url, store !== null, secretIdFor);
+    if (!this.runWrite(r.write, store)) {
+      // SecretStorage failed: keep the URL in data.json rather than lose it.
+      Object.assign(cal, { urlStorage: "synced" as const, url });
+      delete cal.secretId;
+    } else {
+      Object.assign(cal, r.cfg);
+    }
+    this.pendingEnter.delete(cal.id);
+    this.save();
+  }
+
+  private switchStorage(index: number, to: UrlStorage, store: SecretStore | null): void {
+    const cal = this.s.calendars[index];
+    if (!cal) return;
+    const change = changeStorage(cal, to, store ? (id) => store.getSecret(id) : null, secretIdFor);
+    if (!this.runWrite(change.write, store)) {
+      this.display();
+      return;
+    }
+    this.s.calendars[index] = change.cfg;
+    if (change.needsInput) this.pendingEnter.add(cal.id);
+    else this.pendingEnter.delete(cal.id);
+    this.save();
+    this.display();
   }
 
   // ---- sections --------------------------------------------------------
@@ -143,6 +190,8 @@ export class LlrCalendarSettingTab extends PluginSettingTab {
     const { t } = this.host;
     new Setting(root).setName(t("set.sections")).setHeading().setDesc(t("set.sections.desc"));
     root.createEl("p", { text: t("set.sections.hint"), cls: "setting-item-description" });
+
+    this.renderLlrImport(root);
 
     const list = root.createDiv();
     const errors = errorEl(root);
@@ -204,6 +253,46 @@ export class LlrCalendarSettingTab extends PluginSettingTab {
             this.save();
           }),
       );
+  }
+
+  private renderLlrImport(root: HTMLElement): void {
+    const { t } = this.host;
+    new Setting(root)
+      .setName(t("set.sections.llr"))
+      .setDesc(t("set.sections.llr.desc"))
+      .addButton((b) => b.setButtonText(t("set.sections.llr.button")).onClick(() => void this.importFromLlr()));
+  }
+
+  private async importFromLlr(): Promise<void> {
+    const { t } = this.host;
+    const raw = await readLlrSectionDefinitions(this.app);
+    if (raw === null) {
+      new Notice(t("notice.llrNotFound"));
+      return;
+    }
+    const { sections, skipped } = convertLlrSections(raw);
+    if (sections.length === 0) {
+      new Notice(t("notice.llrEmpty"));
+      return;
+    }
+    if (this.s.sections.length > 0) {
+      const ok = await confirmModal(
+        this.app,
+        t,
+        t("modal.llr.title"),
+        t("modal.llr.body", { n: this.s.sections.length, m: sections.length }),
+        t("modal.llr.ok"),
+      );
+      if (!ok) return;
+    }
+    this.s.sections = sections;
+    this.save();
+    this.display();
+    const lines = [t("notice.llrImported", { n: sections.length })];
+    if (skipped > 0) lines.push(t("notice.llrSkipped", { n: skipped }));
+    const early = sectionBeforeBoundary(sections, this.s.dayBoundary);
+    if (early !== null) lines.push(t("set.sections.llr.boundaryHint", { start: early, boundary: this.s.dayBoundary }));
+    new Notice(lines.join("\n"), 8000);
   }
 
   // ---- other options ---------------------------------------------------

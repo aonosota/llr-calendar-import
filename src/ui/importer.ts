@@ -9,7 +9,7 @@ import type { ImportOutcome } from "../pipeline";
 import type { Lang, Translate } from "../i18n";
 import { createDailyNote, dailyNotePath, getDailyNoteConfig } from "./dailyNote";
 import { confirmModal } from "./modals";
-import { resolveCalendarUrl } from "./secrets";
+import { resolveCalendarUrlInfo } from "./secrets";
 
 /** What the importer needs from the plugin. */
 export interface ImportHost {
@@ -41,12 +41,22 @@ export class Importer {
     if (this.host.settings.debugLog) console.debug(LOG_PREFIX, message);
   }
 
+  /** Names (as the pipeline reports them) of calendars whose URL is device-stored but absent here. */
+  private missingOnDevice = new Set<string>();
+
   private buildSources(): CalendarSource[] {
     const sources: CalendarSource[] = [];
+    this.missingOnDevice = new Set();
+    let position = 0;
     for (const cfg of this.host.settings.calendars) {
       if (!cfg.enabled) continue;
-      const url = resolveCalendarUrl(this.host.app, cfg).trim();
+      position++;
+      const { url, missing } = resolveCalendarUrlInfo(this.host.app, cfg);
       if (url === "") {
+        // Same naming rule as fetchAllEvents (label, else "Calendar <n>").
+        if (missing === "device") {
+          this.missingOnDevice.add(cfg.label?.trim() ? cfg.label.trim() : this.host.t("unnamedCalendar", { n: position }));
+        }
         this.debug(`calendar "${cfg.label ?? cfg.id}" has no URL`);
         sources.push({
           id: cfg.id,
@@ -60,6 +70,20 @@ export class Importer {
       sources.push(createIcsSource({ ...cfg, url }, requestUrlFetcher));
     }
     return sources;
+  }
+
+  /** Replaces the generic "fetch failed" line of device-missing calendars with a specific one. Names only, no URLs. */
+  private withDeviceHints(message: string): string {
+    const { t } = this.host;
+    return message
+      .split("\n")
+      .map((line) => {
+        for (const name of this.missingOnDevice) {
+          if (line === t("notice.failed", { name })) return t("notice.urlMissingDevice", { name });
+        }
+        return line;
+      })
+      .join("\n");
   }
 
   /** Import events of `date` into its daily note. Concurrent calls are ignored. */
@@ -85,7 +109,7 @@ export class Importer {
     const { app, t, lang } = this.host;
     const settings = this.host.settings;
     const fallbackLabel = headingLabel(settings.fallbackHeading);
-    const show = (o: ImportOutcome) => notice(buildNoticeMessage(o, lang, fallbackLabel));
+    const show = (o: ImportOutcome) => notice(this.withDeviceHints(buildNoticeMessage(o, lang, fallbackLabel)));
 
     const invalid = validateImportSettings(settings);
     if (invalid !== null) {
