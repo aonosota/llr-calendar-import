@@ -4,3 +4,7 @@ main.js
 data.json
 .DS_Store
 coverage/
+*.log
+.vscode/
+.idea/
+.env*

@@ -26,5 +26,17 @@
   },
   "dependencies": {
     "ical.js": "^2.2.1"
-  }
+  },
+  "author": "Sota Aono",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aonosota/llr-calendar-import.git"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "llr",
+    "calendar",
+    "ics"
+  ]
 }
