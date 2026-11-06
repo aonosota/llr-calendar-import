@@ -85,6 +85,12 @@ export interface CalendarConfig {
   url: string;
   /** SecretStorage id holding the URL (Obsidian >= 1.11.4), if used. */
   secretId?: string;
+  /**
+   * Where the URL is kept. "device" = SecretStorage (not synced; enter once per device).
+   * "synced" = plain text in data.json (synced by Obsidian Sync etc.).
+   * Missing → "device" when secretId is set, else "synced".
+   */
+  urlStorage?: "device" | "synced";
   label?: string;
   enabled: boolean;
 }
