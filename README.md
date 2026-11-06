@@ -55,6 +55,8 @@ Copy `main.js` and `manifest.json` into `<vault>/.obsidian/plugins/llr-calendar-
 
 Releases: bump `version` in `manifest.json`, `package.json` and `versions.json`, then push a tag equal to the version (e.g. `0.1.0`). GitHub Actions builds and creates a draft release with `main.js` and `manifest.json`.
 
+For the full release and community-directory submission procedure (and how it differs from older guides), see [`docs/releasing.md`](docs/releasing.md) (Japanese).
+
 Design notes and requirements: [`docs/requirements.md`](docs/requirements.md) (Japanese).
 
 ## License
